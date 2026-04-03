@@ -20,7 +20,10 @@ import com.ganadeia.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    onNavigateToProfile: () -> Unit,
+    onNavigateToRegisterAnimal: () -> Unit
+) {
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -52,7 +55,7 @@ fun DashboardScreen() {
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToProfile,
                     icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
                     label = { Text("Perfil") }
                 )
@@ -60,7 +63,7 @@ fun DashboardScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = onNavigateToRegisterAnimal,
                 containerColor = AccentOrange,
                 shape = RoundedCornerShape(16.dp)
             ) {

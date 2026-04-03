@@ -6,6 +6,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ganadeia.app.ui.screens.DashboardScreen
 import com.ganadeia.app.ui.screens.LoginScreen
+import com.ganadeia.app.ui.screens.ProfileScreen
+import com.ganadeia.app.ui.screens.RegisterAnimalScreen
 
 @Composable
 fun AppNavigation() {
@@ -22,7 +24,32 @@ fun AppNavigation() {
             )
         }
         composable("dashboard") {
-            DashboardScreen()
+            DashboardScreen(
+                onNavigateToProfile = {
+                    navController.navigate("profile") {
+                        popUpTo("dashboard")
+                    }
+                },
+                onNavigateToRegisterAnimal = {
+                    navController.navigate("register_animal")
+                }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                onNavigateToHome = {
+                    navController.navigate("dashboard") {
+                        popUpTo("dashboard") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("register_animal") {
+            RegisterAnimalScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

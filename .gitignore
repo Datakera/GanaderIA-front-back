@@ -1,0 +1,37 @@
+# Gradle build and cache folders
+.gradle/
+build/
+*/build/
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iml
+*.iws
+local.properties
+
+# Antigravity (Local Assistant Cache/Configurations)
+.gemini/
+.agents/
+_agents/
+brain/
+
+# macOS / Windows OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Compiled Kotlin/Java classes and temp files
+*.class
+*.log
+bin/
+gen/
+out/
+
+# Android generated artifacts
+*.apk
+*.ap_
+*.dex
+*.aab
+
+# Kotlin Multiplatform / Native if ever used in the future
+.kotlin/
