@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="background_cream">#EFECE2</color>
-    <string name="app_name">GanadeIA</string>
-    <style name="Theme.GanadeIA" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/background_cream</item>
-    </style>
-</resources>
