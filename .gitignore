@@ -35,3 +35,14 @@ out/
 
 # Kotlin Multiplatform / Native if ever used in the future
 .kotlin/
+
+# Entorno Backend y Bases de Datos Locales (Generados tras pull)
+.env
+.env.local
+.env.*
+*.sqlite
+*.db
+*.db-journal
+logs/
+*.swp
+*~

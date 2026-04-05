@@ -21,7 +21,10 @@ import com.ganadeia.app.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onNavigateToHome: () -> Unit) {
+fun ProfileScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToIaAnalysis: () -> Unit
+) {
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -42,7 +45,7 @@ fun ProfileScreen(onNavigateToHome: () -> Unit) {
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToIaAnalysis,
                     icon = { Icon(Icons.Default.Star, contentDescription = "IA") },
                     label = { Text("IA") }
                 )

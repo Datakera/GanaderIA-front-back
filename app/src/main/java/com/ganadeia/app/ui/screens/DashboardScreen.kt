@@ -22,7 +22,8 @@ import com.ganadeia.app.ui.theme.*
 @Composable
 fun DashboardScreen(
     onNavigateToProfile: () -> Unit,
-    onNavigateToRegisterAnimal: () -> Unit
+    onNavigateToRegisterAnimal: () -> Unit,
+    onNavigateToIaAnalysis: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -49,7 +50,7 @@ fun DashboardScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToIaAnalysis,
                     icon = { Icon(Icons.Default.Star, contentDescription = "IA") },
                     label = { Text("IA") }
                 )
