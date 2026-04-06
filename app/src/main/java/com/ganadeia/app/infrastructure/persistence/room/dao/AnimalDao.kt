@@ -14,4 +14,11 @@ interface AnimalDao {
 
     @Query("SELECT * FROM animals WHERE ownerId = :ownerId")
     suspend fun getAnimalsByOwner(ownerId: String): List<AnimalEntity>
+
+    @Query("SELECT * FROM animals WHERE status = 'ACTIVE'")
+    suspend fun getAllActiveAnimals(): List<AnimalEntity>
+
+    // Nuevo: Para actualizar solo la fecha de seguimiento
+    @Query("UPDATE animals SET nextFollowUpDate = :newDate WHERE id = :id")
+    suspend fun updateFollowUpDate(id: String, newDate: Long)
 }

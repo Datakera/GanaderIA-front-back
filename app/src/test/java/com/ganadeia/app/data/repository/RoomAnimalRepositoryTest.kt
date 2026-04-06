@@ -3,6 +3,8 @@ package com.ganadeia.app.data.repository
 import com.ganadeia.app.domain.model.Animal
 import com.ganadeia.app.domain.model.AnimalPurpose
 import com.ganadeia.app.domain.model.AnimalStatus
+import com.ganadeia.app.domain.model.AnimalType
+import com.ganadeia.app.domain.model.BreedHardiness
 import com.ganadeia.app.infrastructure.persistence.room.dao.AnimalDao
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -18,11 +20,18 @@ class RoomAnimalRepositoryTest {
 
     @Test
     fun `addAnimal should convert domain model to entity and call dao`() = runBlocking {
-        // Given
+        // Given: Datos completos del dominio
         val animal = Animal(
-            id = "1", name = "Lola", breed = "Jersey",
-            currentWeight = 200.0, birthDate = 12345L,
-            purpose = AnimalPurpose.MEAT, status = AnimalStatus.ACTIVE,
+            id = "1",
+            userId = "owner-123",
+            name = "Lola",
+            type = AnimalType.BOVINE,
+            breed = "Jersey",
+            hardiness = BreedHardiness.LOW,
+            currentWeight = 200.0,
+            birthDate = 12345L,
+            purpose = AnimalPurpose.MEAT,
+            status = AnimalStatus.ACTIVE,
             nextFollowUpDate = null
         )
 
@@ -31,7 +40,7 @@ class RoomAnimalRepositoryTest {
 
         // Then
         assertTrue(result)
-        // Verificamos que el DAO recibió una entidad con los datos correctos
+        // Verificamos que el DAO recibió una entidad
         verify(animalDao).insertAnimal(any())
     }
 }
