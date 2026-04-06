@@ -23,7 +23,8 @@ import com.ganadeia.app.ui.theme.*
 fun DashboardScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToRegisterAnimal: () -> Unit,
-    onNavigateToIaAnalysis: () -> Unit
+    onNavigateToIaAnalysis: () -> Unit,
+    onNavigateToAnimals: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -44,7 +45,7 @@ fun DashboardScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToAnimals,
                     icon = { Icon(Icons.Default.List, contentDescription = "Animales") },
                     label = { Text("Animales") }
                 )

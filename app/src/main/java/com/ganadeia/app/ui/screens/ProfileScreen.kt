@@ -23,7 +23,8 @@ import com.ganadeia.app.ui.theme.*
 @Composable
 fun ProfileScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToIaAnalysis: () -> Unit
+    onNavigateToIaAnalysis: () -> Unit,
+    onNavigateToAnimals: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -39,7 +40,7 @@ fun ProfileScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToAnimals,
                     icon = { Icon(Icons.Default.List, contentDescription = "Animales") },
                     label = { Text("Animales") }
                 )

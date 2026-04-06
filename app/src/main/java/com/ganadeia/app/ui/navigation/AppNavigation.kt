@@ -9,6 +9,7 @@ import com.ganadeia.app.ui.screens.IaAnalysisScreen
 import com.ganadeia.app.ui.screens.LoginScreen
 import com.ganadeia.app.ui.screens.ProfileScreen
 import com.ganadeia.app.ui.screens.RegisterAnimalScreen
+import com.ganadeia.app.ui.screens.AnimalsScreen
 
 @Composable
 fun AppNavigation() {
@@ -38,6 +39,11 @@ fun AppNavigation() {
                     navController.navigate("ia_analysis") {
                         popUpTo("dashboard")
                     }
+                },
+                onNavigateToAnimals = {
+                    navController.navigate("animals") {
+                        popUpTo("dashboard")
+                    }
                 }
             )
         }
@@ -52,6 +58,11 @@ fun AppNavigation() {
                     navController.navigate("ia_analysis") {
                         popUpTo("dashboard")
                     }
+                },
+                onNavigateToAnimals = {
+                    navController.navigate("animals") {
+                        popUpTo("dashboard")
+                    }
                 }
             )
         }
@@ -64,6 +75,13 @@ fun AppNavigation() {
         }
         composable("ia_analysis") {
             IaAnalysisScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("animals") {
+            AnimalsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
