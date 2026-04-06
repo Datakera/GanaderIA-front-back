@@ -21,4 +21,8 @@ interface AnimalDao {
     // Nuevo: Para actualizar solo la fecha de seguimiento
     @Query("UPDATE animals SET nextFollowUpDate = :newDate WHERE id = :id")
     suspend fun updateFollowUpDate(id: String, newDate: Long)
+
+    // Requerido por el test de CASCADE DELETE en VaccinationDatabaseTest
+    @Query("DELETE FROM animals WHERE id = :id")
+    suspend fun deleteAnimal(id: String)
 }
