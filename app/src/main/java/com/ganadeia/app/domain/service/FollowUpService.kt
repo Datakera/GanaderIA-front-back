@@ -12,65 +12,67 @@ object FollowUpService {
 
     // Constantes de configuración de días (Fáciles de ajustar en el futuro)
     private const val CRITICAL_HEALTH_FOLLOW_UP_DAYS = 3
+    private const val MODERATE_HEALTH_FOLLOW_UP_DAYS = 7
     private const val IDEAL_BODY_CONDITION = 3
     private const val ADULT_AGE_MONTHS = 24
     private const val CALF_AGE_MONTHS = 6
 
     fun calculateNextFollowUp(animal: Animal, lastRecord: HealthRecord?): Long {
-        val calendar = Calendar.getInstance()
-        val ageInMonths = getAgeInMonths(animal.birthDate)
+        val baseTime = lastRecord?.date ?: System.currentTimeMillis()
+        val calendar = Calendar.getInstance().apply { timeInMillis = baseTime }
+        val ageInMonths = getAgeInMonths(animal.birthDate, baseTime)
 
-        // --- FACTOR 1: SALUD CRÍTICA (ALERTA ROJA) ---
-        // Si hay síntomas activos (que no sea NONE), el seguimiento es casi inmediato.
-        val hasSymptoms = lastRecord?.symptoms?.any { it != Symptom.NONE } ?: false
+        val symptoms = lastRecord?.symptoms ?: emptySet()
+        val hasSymptoms = symptoms.isNotEmpty() && symptoms.any { it != VisibleSymptom.NONE }
+
+        // --- FACTOR 1: PRIORIDAD SANITARIA (ALERTA SEGÚN SEVERIDAD) ---
         if (hasSymptoms) {
-            calendar.add(Calendar.DAY_OF_YEAR, CRITICAL_HEALTH_FOLLOW_UP_DAYS)
+            if (symptoms.any { it.isCritical }) {
+                // Caso: Dificultad Respiratoria -> 3 días
+                calendar.add(Calendar.DAY_OF_YEAR, CRITICAL_HEALTH_FOLLOW_UP_DAYS)
+            } else {
+                // Caso: Fiebre (Moderado) -> 7 días
+                calendar.add(Calendar.DAY_OF_YEAR, MODERATE_HEALTH_FOLLOW_UP_DAYS)
+            }
             return calendar.timeInMillis
         }
 
         // --- FACTOR 2: ETAPA DE VIDA (BASE) ---
-        // Los animales jóvenes requieren supervisión constante para asegurar crecimiento.
+        // Se ejecuta solo si NO hay síntomas (hasSymptoms == false)
         var daysToAdd = when {
-            ageInMonths <= CALF_AGE_MONTHS -> 10 // Terneros: Chequeo muy frecuente
-            ageInMonths <= ADULT_AGE_MONTHS -> 30 // Jóvenes: Control mensual
-            else -> 45 // Adultos sanos: Control trimestral/bimestral
+            ageInMonths <= CALF_AGE_MONTHS -> 10
+            ageInMonths <= ADULT_AGE_MONTHS -> 30
+            else -> 45
         }
 
-        // --- FACTOR 3: PERFIL GENÉTICO (RESISTENCIA) ---
-        // Ajustamos según qué tan delicada es la raza (Baja resistencia = más chequeos).
+        // --- FACTOR 3: PERFIL GENÉTICO ---
         daysToAdd += when (animal.hardiness) {
-            BreedHardiness.LOW -> -5    // Ej: Holstein (Europeas) necesitan más ojo
-            BreedHardiness.MEDIUM -> 0   // Cruces F1
-            BreedHardiness.HIGH -> 5    // Ej: Brahman (Cebú) aguantan más
+            BreedHardiness.LOW -> -5
+            BreedHardiness.MEDIUM -> 0
+            BreedHardiness.HIGH -> 5
         }
 
         // --- FACTOR 4: PROPÓSITO PRODUCTIVO ---
-        // Adaptamos el calendario al ciclo de producción del ganadero.
         daysToAdd = when (animal.purpose) {
-            AnimalPurpose.BREEDING -> if (daysToAdd > 21) 21 else daysToAdd // Ciclo de celo
-            AnimalPurpose.MILK -> if (daysToAdd > 15) 15 else daysToAdd     // Control de mastitis
+            AnimalPurpose.BREEDING -> if (daysToAdd > 21) 21 else daysToAdd
+            AnimalPurpose.MILK -> if (daysToAdd > 15) 15 else daysToAdd
             AnimalPurpose.DUAL_PURPOSE -> if (daysToAdd > 20) 20 else daysToAdd
-            AnimalPurpose.MEAT -> daysToAdd // Se rige principalmente por edad/peso
+            AnimalPurpose.MEAT -> daysToAdd
         }
 
-        // --- FACTOR 5: RIESGO FÍSICO (CONDICIÓN CORPORAL) ---
-        // Si el animal está flaco (BCS < 3), adelantamos el chequeo para ajustar dieta.
+        // --- FACTOR 5: RIESGO FÍSICO (BCS) ---
         lastRecord?.let {
-            if (it.bodyCondition < IDEAL_BODY_CONDITION) {
-                daysToAdd -= 7 // Adelantamos una semana para monitorear recuperación
+            if (it.bodyConditionScore < IDEAL_BODY_CONDITION) {
+                daysToAdd -= 7
             }
         }
 
-        // Aplicamos el cálculo final
         calendar.add(Calendar.DAY_OF_YEAR, daysToAdd)
         return calendar.timeInMillis
     }
 
-    /**
-     * Helper para calcular la edad exacta en meses a partir del timestamp de nacimiento.
-     */
-    private fun getAgeInMonths(birthDate: Long): Int {
-        val diff = System.currentTimeMillis() - birthDate
+    private fun getAgeInMonths(birthDate: Long, referenceDate: Long): Int {
+        val diff = referenceDate - birthDate
         val days = TimeUnit.MILLISECONDS.toDays(diff)
         return (days / 30).toInt()
     }

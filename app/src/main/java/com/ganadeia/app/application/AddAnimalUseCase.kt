@@ -9,6 +9,7 @@ import com.ganadeia.app.domain.model.User
 import com.ganadeia.app.domain.model.UserRole
 import com.ganadeia.app.domain.port.driven.repository.AnimalRepository
 import com.ganadeia.app.domain.service.DateCalculator
+import com.ganadeia.app.domain.service.FollowUpService
 import java.util.UUID
 
 class AddAnimalUseCase(
@@ -32,7 +33,7 @@ class AddAnimalUseCase(
 
         val calculatedBirthDate = DateCalculator.monthsToBirthDate(request.ageInMonths)
 
-        val newAnimal = Animal(
+        val tempAnimal = Animal(
             id = UUID.randomUUID().toString(),
             userId = request.owner.id,
             name = request.name.trim(),
@@ -45,6 +46,14 @@ class AddAnimalUseCase(
             status = AnimalStatus.ACTIVE,
             nextFollowUpDate = request.initialFollowUpDate
         )
+
+        // 2. Lógica de asignación de fecha
+        // Si request.initialFollowUpDate es null, calculamos una automática
+        val finalFollowUpDate = request.initialFollowUpDate
+            ?: FollowUpService.calculateNextFollowUp(tempAnimal, null)
+
+        // 3. Creamos el animal definitivo con la fecha calculada
+        val newAnimal = tempAnimal.copy(nextFollowUpDate = finalFollowUpDate)
 
         val success = animalRepository.addAnimal(request.owner.id, newAnimal)
 

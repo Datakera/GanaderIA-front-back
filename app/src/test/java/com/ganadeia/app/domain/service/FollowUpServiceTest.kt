@@ -55,8 +55,8 @@ class FollowUpServiceTest {
         val animal = createBaseAnimal()
         val record = HealthRecord(
             id = "r1", animalId = "test-1", date = System.currentTimeMillis(),
-            symptoms = listOf(Symptom.FEVER), // <--- Alerta roja
-            recordedWeight = 300.0, bodyCondition = 3, aiRecommendation = null
+            symptoms = setOf(VisibleSymptom.FIEBRE), // <--- Alerta roja
+            weightKg = 300.0, bodyConditionScore = 3, aiRecommendation = null, notes = "", syncStatus = SyncStatus.SYNCED, confirmedFollowUpDate = null
         )
 
         // When
@@ -108,9 +108,13 @@ class FollowUpServiceTest {
         val animal = createBaseAnimal(ageInMonths = 12, hardiness = BreedHardiness.MEDIUM)
         val record = HealthRecord(
             id = "r1", animalId = "test-1", date = System.currentTimeMillis(),
-            symptoms = listOf(Symptom.NONE),
-            recordedWeight = 200.0, bodyCondition = 2, // <--- Flaca
-            aiRecommendation = null
+            symptoms = setOf(VisibleSymptom.NONE),
+            weightKg = 200.0,
+            bodyConditionScore = 2,
+            notes = null,
+            aiRecommendation = null,
+            syncStatus = SyncStatus.SYNCED,
+            confirmedFollowUpDate = null
         )
 
         // When
@@ -127,9 +131,13 @@ class FollowUpServiceTest {
         val animal = createBaseAnimal(ageInMonths = 36, hardiness = BreedHardiness.LOW)
         val record = HealthRecord(
             id = "r1", animalId = "test-1", date = System.currentTimeMillis(),
-            symptoms = listOf(Symptom.NONE),
-            recordedWeight = 350.0, bodyCondition = 2,
-            aiRecommendation = null
+            symptoms = setOf(VisibleSymptom.NONE),
+            weightKg = 350.0,
+            bodyConditionScore = 2,
+            notes = null,
+            aiRecommendation = null,
+            syncStatus = SyncStatus.SYNCED,
+            confirmedFollowUpDate = null
         )
 
         val result = FollowUpService.calculateNextFollowUp(animal, record)
