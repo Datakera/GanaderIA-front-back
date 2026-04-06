@@ -8,7 +8,7 @@ object DateCalculator {
         // Restamos los meses a la fecha actual
         calendar.add(Calendar.MONTH, -months)
         // Opcional: poner el día en 1 para que sea una fecha "base"
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar[Calendar.DAY_OF_MONTH] = 1
         return calendar.timeInMillis
     }
 }
