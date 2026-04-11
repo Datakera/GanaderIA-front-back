@@ -13,22 +13,11 @@ class RoomAnimalRepository(
     private val animalDao: AnimalDao
 ) : AnimalRepository {
 
+    // ── Escritura ─────────────────────────────────────────────────────────────
+
     override suspend fun addAnimal(ownerId: String, animal: Animal): Boolean {
         return try {
-            val entity = AnimalEntity(
-                id = animal.id,
-                ownerId = ownerId,
-                name = animal.name,
-                type = animal.type.name,      // <--- Agregado
-                breed = animal.breed,
-                hardiness = animal.hardiness.name, // <--- Agregado
-                weight = animal.currentWeight,
-                birthDate = animal.birthDate,
-                purpose = animal.purpose.name,
-                status = animal.status.name,
-                nextFollowUpDate = animal.nextFollowUpDate
-            )
-            animalDao.insertAnimal(entity)
+            animalDao.insertAnimal(animal.toEntity(ownerId))
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -36,23 +25,30 @@ class RoomAnimalRepository(
         }
     }
 
-    override suspend fun getAnimalsByOwner(ownerId: String): List<Animal> {
+    override suspend fun updateAnimal(ownerId: String, animal: Animal): Boolean {
         return try {
-            val entities = animalDao.getAnimalsByOwner(ownerId)
-            entities.map { it.toDomain() } // Convertimos la lista
+            animalDao.updateAnimal(
+                id = animal.id,
+                name = animal.name,
+                weight = animal.currentWeight,
+                purpose = animal.purpose.name,
+                status = animal.status.name,
+                nextFollowUpDate = animal.nextFollowUpDate
+            )
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            emptyList()
+            false
         }
     }
 
-    override suspend fun getAllActiveAnimals(): List<Animal> {
+    override suspend fun updateAnimalStatus(animalId: String, newStatus: AnimalStatus): Boolean {
         return try {
-            val entities = animalDao.getAllActiveAnimals()
-            entities.map { it.toDomain() }
+            animalDao.updateAnimalStatus(id = animalId, status = newStatus.name)
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            emptyList()
+            false
         }
     }
 
@@ -66,23 +62,61 @@ class RoomAnimalRepository(
         }
     }
 
-    /**
-     * Función de extensión (Mapper) para limpiar el código.
-     * Convierte una Entity de Room a un objeto de Dominio.
-     */
-    private fun AnimalEntity.toDomain(): Animal {
-        return Animal(
-            id = this.id,
-            userId = this.ownerId,
-            name = this.name,
-            type = AnimalType.valueOf(this.type),
-            breed = this.breed,
-            hardiness = BreedHardiness.valueOf(this.hardiness),
-            currentWeight = this.weight,
-            birthDate = this.birthDate,
-            purpose = AnimalPurpose.valueOf(this.purpose),
-            status = AnimalStatus.valueOf(this.status),
-            nextFollowUpDate = this.nextFollowUpDate
-        )
+    // ── Lectura ───────────────────────────────────────────────────────────────
+
+    override suspend fun getAnimalsByOwner(ownerId: String): List<Animal> {
+        return try {
+            animalDao.getAnimalsByOwner(ownerId).map { it.toDomain() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
+
+    override suspend fun getAllActiveAnimals(): List<Animal> {
+        return try {
+            animalDao.getAllActiveAnimals().map { it.toDomain() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    // ── Mappers privados ──────────────────────────────────────────────────────
+
+    /**
+     * Dominio → Entity.
+     * Se llama solo en addAnimal para inserciones nuevas o reemplazos completos.
+     */
+    private fun Animal.toEntity(ownerId: String) = AnimalEntity(
+        id = id,
+        ownerId = ownerId,
+        name = name,
+        type = type.name,
+        breed = breed,
+        hardiness = hardiness.name,
+        weight = currentWeight,
+        birthDate = birthDate,
+        purpose = purpose.name,
+        status = status.name,
+        nextFollowUpDate = nextFollowUpDate
+    )
+
+    /**
+     * Entity → Dominio.
+     * Usado en todas las lecturas desde Room.
+     */
+    private fun AnimalEntity.toDomain() = Animal(
+        id = id,
+        userId = ownerId,
+        name = name,
+        type = AnimalType.valueOf(type),
+        breed = breed,
+        hardiness = BreedHardiness.valueOf(hardiness),
+        currentWeight = weight,
+        birthDate = birthDate,
+        purpose = AnimalPurpose.valueOf(purpose),
+        status = AnimalStatus.valueOf(status),
+        nextFollowUpDate = nextFollowUpDate
+    )
 }
