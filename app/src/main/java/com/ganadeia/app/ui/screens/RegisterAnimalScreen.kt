@@ -19,10 +19,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.ui.theme.*
+import com.ganadeia.app.ui.viewmodel.AnimalViewModel
+import com.ganadeia.app.application.AddAnimalRequest
+import com.ganadeia.app.domain.model.AnimalType
+import com.ganadeia.app.domain.model.AnimalPurpose
+import com.ganadeia.app.domain.model.BreedHardiness
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterAnimalScreen(onNavigateBack: () -> Unit) {
+fun RegisterAnimalScreen(viewModel: AnimalViewModel, onNavigateBack: () -> Unit) {
     var id by remember { mutableStateOf("A-043") }
     var raza by remember { mutableStateOf("Cebú") }
     var peso by remember { mutableStateOf("350") }
@@ -126,6 +131,44 @@ fun RegisterAnimalScreen(onNavigateBack: () -> Unit) {
                 Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Analizar con IA", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { 
+                    try {
+                        val request = AddAnimalRequest(
+                            owner = viewModel.currentUser,
+                            name = id,
+                            type = AnimalType.BOVINE,
+                            breed = raza,
+                            hardiness = BreedHardiness.HIGH,
+                            weight = peso.toDoubleOrNull() ?: 0.0,
+                            ageInMonths = edad.toIntOrNull() ?: 0,
+                            purpose = AnimalPurpose.MEAT
+                        )
+                        viewModel.guardarAnimal(
+                            request = request,
+                            onSuccess = {
+                                id = ""
+                                raza = ""
+                                peso = ""
+                                edad = ""
+                            },
+                            onError = { /* Error handling */ }
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+            ) {
+                Text("Guardar animal", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
             
             Spacer(modifier = Modifier.height(32.dp))

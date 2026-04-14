@@ -16,10 +16,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.ui.theme.*
+import com.ganadeia.app.ui.viewmodel.AnimalViewModel
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AnimalsScreen(onNavigateBack: () -> Unit) {
+fun AnimalsScreen(
+    viewModel: AnimalViewModel, 
+    onNavigateBack: () -> Unit,
+    onNavigateToDetail: (String) -> Unit
+) {
+    val animales = viewModel.animalesAgregados.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,31 +57,50 @@ fun AnimalsScreen(onNavigateBack: () -> Unit) {
         ) {
             item { Spacer(modifier = Modifier.height(24.dp)) }
             
-            item { AnimalListItem(title = "Res #A-042", subtitle = "Cebú · 380 kg · 4 años", status = "Pendiente", isAnalizado = false) }
-            item { Spacer(modifier = Modifier.height(12.dp)) }
+            if (animales.value.isEmpty()) {
+                 item {
+                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                         Text("No tienes animales registrados aún.", color = GrayText, fontSize = 14.sp)
+                     }
+                 }
+            } else {
+                 items(animales.value.size) { index ->
+                     val animal = animales.value[index]
+                     // We format the label based on mapped fields
+                     val subtitle = "${animal.breed} · ${animal.currentWeight.toInt()} kg"
+                     val isAnalizado = animal.status.name == "ANALYZED"
+                     val statusText = if (isAnalizado) "Analizado" else "Pendiente"
+                     
+                     AnimalListItem(
+                         title = animal.name,
+                         subtitle = subtitle,
+                         status = statusText,
+                         isAnalizado = isAnalizado,
+                         onClick = { onNavigateToDetail(animal.id) }
+                     )
+                     Spacer(modifier = Modifier.height(12.dp))
+                 }
+            }
             
-            item { AnimalListItem(title = "Res #A-039", subtitle = "Brahman · 420 kg · 5 años", status = "Analizado", isAnalizado = true) }
-            item { Spacer(modifier = Modifier.height(12.dp)) }
-            
-            item { AnimalListItem(title = "Res #A-035", subtitle = "Normando · 310 kg · 3 años", status = "Analizado", isAnalizado = true) }
-            item { Spacer(modifier = Modifier.height(12.dp)) }
-            
-            item { AnimalListItem(title = "Res #A-030", subtitle = "Holstein · 450 kg · 4 años", status = "Pendiente", isAnalizado = false) }
-            item { Spacer(modifier = Modifier.height(12.dp)) }
-            
-            item { AnimalListItem(title = "Res #A-028", subtitle = "Cebú · 370 kg · 3 años", status = "Analizado", isAnalizado = true) }
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
 
 @Composable
-fun AnimalListItem(title: String, subtitle: String, status: String, isAnalizado: Boolean) {
+fun AnimalListItem(
+    title: String, 
+    subtitle: String, 
+    status: String, 
+    isAnalizado: Boolean,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
