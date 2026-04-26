@@ -1,6 +1,7 @@
 package com.ganadeia.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -11,22 +12,38 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.ui.theme.*
+import com.ganadeia.app.ui.viewmodel.AuthState
+import com.ganadeia.app.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
-    var email by remember { mutableStateOf("") }
+fun LoginScreen(
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
+    var email    by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val authState by viewModel.authState.collectAsState()
+
+    // Navegar al dashboard si login fue exitoso
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            viewModel.resetState()
+            onLoginSuccess()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(PrimaryGreen)
     ) {
+        // Hero section
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -41,21 +58,19 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                         .background(AccentOrange),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(modifier = Modifier
-                        .size(16.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White))
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                    )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "GanadeIA",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Text("GanadeIA", color = Color.White, style = MaterialTheme.typography.titleMedium)
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             Text(
                 text = "Decisiones\ninteligentes\npara tu ganado",
                 color = Color.White,
@@ -63,9 +78,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 fontSize = 36.sp,
                 lineHeight = 40.sp
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = "Colombia · Sector ganadero",
                 color = Color.White.copy(alpha = 0.8f),
@@ -73,6 +88,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             )
         }
 
+        // Formulario inferior
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,16 +97,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 .padding(top = 32.dp, start = 32.dp, end = 32.dp, bottom = 48.dp)
         ) {
             Column {
-                Text(
-                    text = "CORREO ELECTRÓNICO",
-                    color = GrayText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("CORREO ELECTRÓNICO", color = GrayText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { email = it; viewModel.resetState() },
                     placeholder = { Text("carlos@fincaelvalle.co") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -103,16 +114,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "CONTRASEÑA",
-                    color = GrayText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("CONTRASEÑA", color = GrayText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { password = it; viewModel.resetState() },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -123,17 +129,42 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                     )
                 )
 
+                // Mensaje de error
+                if (authState is AuthState.Error) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEEEE))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            (authState as AuthState.Error).message,
+                            color = Color(0xFFCC0000),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = onLoginSuccess,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    onClick = { viewModel.login(email, password) },
+                    enabled = authState !is AuthState.Loading,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryGreen,
+                        disabledContainerColor = PrimaryGreen.copy(alpha = 0.6f)
+                    )
                 ) {
-                    Text("Ingresar", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = if (authState is AuthState.Loading) "Ingresando..." else "Ingresar",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -142,8 +173,14 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("¿Olvidaste tu contraseña? ", color = GrayText, fontSize = 14.sp)
-                    Text("Recupérala aquí", color = AccentOrange, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("¿No tienes cuenta? ", color = GrayText, fontSize = 14.sp)
+                    Text(
+                        "Regístrate aquí",
+                        color = AccentOrange,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { viewModel.resetState(); onNavigateToRegister() }
+                    )
                 }
             }
         }

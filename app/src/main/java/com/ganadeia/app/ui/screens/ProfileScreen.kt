@@ -1,6 +1,7 @@
 package com.ganadeia.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -18,13 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.ui.theme.*
+import com.ganadeia.app.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    authViewModel: AuthViewModel,
     onNavigateToHome: () -> Unit,
     onNavigateToIaAnalysis: () -> Unit,
-    onNavigateToAnimals: () -> Unit
+    onNavigateToAnimals: () -> Unit,
+    onLogout: () -> Unit
 ) {
     Scaffold(
         bottomBar = {
@@ -114,7 +118,13 @@ fun ProfileScreen(
                     Divider(color = CardLight, thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
                     ProfileMenuItem(icon = Icons.Default.Notifications, title = "Notificaciones", subtitle = "Activadas")
                     Divider(color = CardLight, thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
-                    ProfileMenuItem(icon = Icons.Default.ExitToApp, title = "Sesión", subtitle = "Cerrar sesión", isDestructive = true)
+                    ProfileMenuItem(
+                        icon = Icons.Default.ExitToApp,
+                        title = "Sesión",
+                        subtitle = "Cerrar sesión",
+                        isDestructive = true,
+                        onClick = { authViewModel.logout(onLogout) }
+                    )
                 }
             }
             item {
@@ -207,10 +217,17 @@ fun ProfileStat(number: String, label: String) {
 }
 
 @Composable
-fun ProfileMenuItem(icon: ImageVector, title: String, subtitle: String, isDestructive: Boolean = false) {
+fun ProfileMenuItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    isDestructive: Boolean = false,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

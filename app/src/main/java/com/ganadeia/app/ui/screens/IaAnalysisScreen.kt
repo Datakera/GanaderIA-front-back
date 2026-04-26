@@ -9,7 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,18 +20,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ganadeia.app.domain.model.Animal
+import com.ganadeia.app.domain.model.HealthRecord
+import com.ganadeia.app.domain.model.VaccinationRecord
+import com.ganadeia.app.domain.model.VaccineStatus
 import com.ganadeia.app.ui.theme.*
+import com.ganadeia.app.ui.viewmodel.IaAnalysisState
+import com.ganadeia.app.ui.viewmodel.IaAnalysisViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IaAnalysisScreen(onNavigateBack: () -> Unit) {
+fun IaAnalysisScreen(
+    viewModel: IaAnalysisViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val animals by viewModel.userAnimals.collectAsState()
+    val analysisState by viewModel.analysisState.collectAsState()
+
+    var selectedAnimal by remember { mutableStateOf<Animal?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUserAnimals()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Análisis IA", color = Color.White, style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onNavigateBack,
+                        onClick = {
+                            viewModel.resetState()
+                            onNavigateBack()
+                        },
                         modifier = Modifier
                             .padding(start = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
@@ -46,33 +71,35 @@ fun IaAnalysisScreen(onNavigateBack: () -> Unit) {
         },
         containerColor = CardLight,
         bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { },
+            if (analysisState is IaAnalysisState.Success) {
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark)
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Compartir", fontWeight = FontWeight.SemiBold)
-                }
-                
-                Button(
-                    onClick = { },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                ) {
-                    Text("Guardar en historial", fontWeight = FontWeight.SemiBold)
+                    OutlinedButton(
+                        onClick = { },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark)
+                    ) {
+                        Text("Compartir", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Button(
+                        onClick = { },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    ) {
+                        Text("Guardar en historial", fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
@@ -84,36 +111,116 @@ fun IaAnalysisScreen(onNavigateBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // First Animal Analysis
-            AnimalAnalysisItem(
-                title = "Res #A-042 — Cebú",
-                tags = listOf("350 kg", "36 meses", "CC: 2/5", "Huila"),
-                diaText = "El animal presenta una condición corporal baja (2/5) con pérdida de apetito y pelaje opaco. Estos síntomas son consistentes con deficiencia de minerales y posible parasitosis gastrointestinal.",
-                prioritariaText = "Realizar examen coproparasitológico en los próximos 3 días y aplicar desparasitación preventiva si se confirma carga parasitaria elevada.",
-                nutricionalText = "Suplementar con bloque mineral (sal mineralizada al 8% de fósforo) durante 30 días. Aumentar aporte de forraje de alta calidad (Maralfalfa o King Grass) mínimo 3% del peso vivo/día.",
-                confianza = 0.87f,
-                seguimientoText = "Si la condición corporal no mejora a 3/5, considerar consulta con médico veterinario especializado en nutrición bovina.",
-                seguimientoBoldText = "Re-evaluar en 15 días. "
-            )
+
+            // Selector de animal
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Text(
+                    text = "Animal a analizar",
+                    color = GrayText,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedAnimal?.name ?: "Seleccione un animal",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White,
+                            unfocusedBorderColor = PrimaryGreen,
+                            focusedBorderColor = PrimaryGreen
+                        )
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        animals.forEach { animal ->
+                            DropdownMenuItem(
+                                text = { Text("${animal.id.take(4).uppercase()} - ${animal.name}") },
+                                onClick = {
+                                    selectedAnimal = animal
+                                    expanded = false
+                                    viewModel.resetState()
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        selectedAnimal?.let { viewModel.analyzeAnimal(it.id) }
+                    },
+                    enabled = selectedAnimal != null && analysisState !is IaAnalysisState.Loading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryGreen,
+                        disabledContainerColor = PrimaryGreen.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Text(
+                        text = if (analysisState is IaAnalysisState.Loading) "Analizando..." else "Analizar",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+
+                if (analysisState is IaAnalysisState.Error) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = (analysisState as IaAnalysisState.Error).message,
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
-            Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.padding(horizontal = 24.dp))
-            Spacer(modifier = Modifier.height(32.dp))
 
-            // Second Animal Analysis (To enable scrolling as requested)
-            AnimalAnalysisItem(
-                title = "Res #A-039 — Brahman",
-                tags = listOf("420 kg", "5 años", "CC: 3/5", "Antioquia"),
-                diaText = "El animal se encuentra en buen estado general. La ganancia de peso diaria es aceptable para su edad y raza. No se observan signos de enfermedades activas.",
-                prioritariaText = "Mantener esquema de vacunación actualizado y proveer control de parásitos externos rutinariamente.",
-                nutricionalText = "Continuar con pastoreo rotacional. Mantener acceso a agua limpia a voluntad y oferta continua de sal mineralizada base.",
-                confianza = 0.95f,
-                seguimientoText = "para evaluar la ganancia de peso mensual de forma regular.",
-                seguimientoBoldText = "Control de rutina en 30 días "
-            )
-            
-            Spacer(modifier = Modifier.height(48.dp))
+            // Resultados del análisis
+            if (analysisState is IaAnalysisState.Success) {
+                val successState = analysisState as IaAnalysisState.Success
+                val animal = successState.animal
+                val record = successState.result.record
+                val healthChecks = successState.healthChecks
+                val vaccines = successState.vaccinations
+
+                Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.padding(horizontal = 24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
+
+                AnimalAnalysisItem(
+                    title = "${animal.id.take(4).uppercase()} — ${animal.name}",
+                    tags = listOf("${animal.currentWeight} kg", animal.type.name, animal.purpose.name),
+                    diaText = record.generalDiagnosis ?: "Análisis en proceso o guardado offline.",
+                    prioritariaText = record.priorityAction ?: "N/A",
+                    nutricionalText = record.nutritionalRecommendation ?: "N/A",
+                    confianza = record.confidenceScore ?: 0f,
+                    seguimientoText = " (Sugerido por Groq API)",
+                    seguimientoBoldText = "Acción Recomendada",
+                    healthChecks = healthChecks,
+                    vaccines = vaccines
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+            }
         }
     }
 }
@@ -127,7 +234,9 @@ fun AnimalAnalysisItem(
     nutricionalText: String,
     confianza: Float,
     seguimientoText: String,
-    seguimientoBoldText: String
+    seguimientoBoldText: String,
+    healthChecks: List<HealthRecord>,
+    vaccines: List<VaccinationRecord>
 ) {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         // Animal Header Card
@@ -143,10 +252,10 @@ fun AnimalAnalysisItem(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE8F2EC)), // Light green
+                    .background(Color(0xFFE8F2EC)),
                 contentAlignment = Alignment.Center
             ) {
-                 Text("🐮", fontSize = 24.sp)
+                Text("🐮", fontSize = 24.sp)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
@@ -180,8 +289,8 @@ fun AnimalAnalysisItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFF9EAE1)) // Light orange background
-                    .padding(start = 4.dp) // Left border simulation
+                    .background(Color(0xFFF9EAE1))
+                    .padding(start = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -201,7 +310,6 @@ fun AnimalAnalysisItem(
                         lineHeight = 20.sp
                     )
                 }
-                // Custom Left Border
                 Box(modifier = Modifier.width(4.dp).matchParentSize().background(AccentOrange))
             }
         }
@@ -220,11 +328,11 @@ fun AnimalAnalysisItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Confianza del modelo", color = GrayText, fontSize = 12.sp)
-                Text("${(confianza * 100).toInt()}%", color = TextDark, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("${confianza.toInt()}%", color = TextDark, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
-                progress = confianza,
+                progress = confianza / 100f,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
@@ -239,7 +347,7 @@ fun AnimalAnalysisItem(
         // Seguimiento Sugerido
         AnalysisCard(
             title = "SEGUIMIENTO SUGERIDO",
-            iconColor = Color(0xFF5E4B40) // Dark brown
+            iconColor = Color(0xFF5E4B40)
         ) {
             Text(
                 text = buildAnnotatedString {
@@ -252,6 +360,63 @@ fun AnimalAnalysisItem(
                 fontSize = 14.sp,
                 lineHeight = 22.sp
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Historial Médico
+        AnalysisCard(
+            title = "HISTORIAL MÉDICO RECIENTE",
+
+        iconColor = Color(0xFF1976D2) // Azul
+        ) {
+            if (healthChecks.isEmpty()) {
+                Text("No hay registros médicos para este animal.", color = GrayText, fontSize = 14.sp)
+            } else {
+                val latestCheck = healthChecks.maxByOrNull { it.date }
+                if (latestCheck != null) {
+                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    val dateString = sdf.format(Date(latestCheck.date))
+
+                    Text("Último chequeo: $dateString", fontWeight = FontWeight.Bold, color = TextDark, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Peso: ${latestCheck.weightKg} kg", color = TextDark, fontSize = 14.sp)
+                    Text("Condición Corporal: ${latestCheck.bodyConditionScore}/5", color = TextDark, fontSize = 14.sp)
+                    if (latestCheck.notes != null) {
+                        Text("Obs: ${latestCheck.notes}", color = GrayText, fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Vacunas
+        AnalysisCard(
+            title = "PLAN DE VACUNACIÓN",
+            iconColor = Color(0xFF9C27B0) // Morado
+        ) {
+            if (vaccines.isEmpty()) {
+                Text("No hay vacunas registradas.", color = GrayText, fontSize = 14.sp)
+            } else {
+                val applied = vaccines.count { it.status == VaccineStatus.APPLIED }
+                val pending = vaccines.count { it.status != VaccineStatus.APPLIED }
+
+                Text("Aplicadas: $applied", color = PrimaryGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Pendientes: $pending", color = AccentOrange, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+
+                val nextVaccine = vaccines.filter { it.status != VaccineStatus.APPLIED }.minByOrNull { it.scheduledDate }
+                if (nextVaccine != null) {
+                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Próxima vacuna: ${nextVaccine.vaccineName} (${sdf.format(Date(nextVaccine.scheduledDate))})",
+                        color = TextDark,
+                        fontSize = 13.sp
+                    )
+                }
+            }
         }
     }
 }

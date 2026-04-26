@@ -138,18 +138,19 @@ fun RegisterAnimalScreen(viewModel: AnimalViewModel, onNavigateBack: () -> Unit)
             Button(
                 onClick = { 
                     try {
-                        val request = AddAnimalRequest(
-                            owner = viewModel.currentUser,
-                            name = id,
-                            type = AnimalType.BOVINE,
-                            breed = raza,
-                            hardiness = BreedHardiness.HIGH,
-                            weight = peso.toDoubleOrNull() ?: 0.0,
-                            ageInMonths = edad.toIntOrNull() ?: 0,
-                            purpose = AnimalPurpose.MEAT
-                        )
                         viewModel.guardarAnimal(
-                            request = request,
+                            requestBuilder = { user ->
+                                AddAnimalRequest(
+                                    owner = user,
+                                    name = id,
+                                    type = AnimalType.BOVINE,
+                                    breed = raza,
+                                    hardiness = BreedHardiness.HIGH,
+                                    weight = peso.toDoubleOrNull() ?: 0.0,
+                                    ageInMonths = edad.toIntOrNull() ?: 0,
+                                    purpose = AnimalPurpose.MEAT
+                                )
+                            },
                             onSuccess = {
                                 id = ""
                                 raza = ""
