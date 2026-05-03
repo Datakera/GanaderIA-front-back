@@ -74,6 +74,8 @@ data class AiRecommendationResponseDto(
     val general_diagnosis: String,
     val priority_action: String,
     val nutritional_recommendation: String,
+    val medical_recommendation: String,
+    val vaccine_recommendation: String,
     val confidence_score: Float
 )
 
@@ -158,6 +160,8 @@ class RetrofitAiService(
         generalDiagnosis          = general_diagnosis,
         priorityAction            = priority_action,
         nutritionalRecommendation = nutritional_recommendation,
+        medicalRecommendation     = medical_recommendation,
+        vaccineRecommendation     = vaccine_recommendation,
         confidenceScore           = confidence_score
     )
 

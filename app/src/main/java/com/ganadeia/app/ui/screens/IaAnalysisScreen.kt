@@ -21,21 +21,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.domain.model.Animal
-import com.ganadeia.app.domain.model.HealthRecord
-import com.ganadeia.app.domain.model.VaccinationRecord
-import com.ganadeia.app.domain.model.VaccineStatus
 import com.ganadeia.app.ui.theme.*
 import com.ganadeia.app.ui.viewmodel.IaAnalysisState
 import com.ganadeia.app.ui.viewmodel.IaAnalysisViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IaAnalysisScreen(
     viewModel: IaAnalysisViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToAnimalDetail: (String) -> Unit
 ) {
     val animals by viewModel.userAnimals.collectAsState()
     val analysisState by viewModel.analysisState.collectAsState()
@@ -91,7 +86,13 @@ fun IaAnalysisScreen(
                     }
 
                     Button(
-                        onClick = { },
+                        onClick = {
+                            val successState = analysisState as? IaAnalysisState.Success
+                            if (successState != null) {
+                                viewModel.resetState()
+                                onNavigateToAnimalDetail(successState.animal.id)
+                            }
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -200,8 +201,6 @@ fun IaAnalysisScreen(
                 val successState = analysisState as IaAnalysisState.Success
                 val animal = successState.animal
                 val record = successState.result.record
-                val healthChecks = successState.healthChecks
-                val vaccines = successState.vaccinations
 
                 Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp, modifier = Modifier.padding(horizontal = 24.dp))
                 Spacer(modifier = Modifier.height(32.dp))
@@ -212,11 +211,11 @@ fun IaAnalysisScreen(
                     diaText = record.generalDiagnosis ?: "Análisis en proceso o guardado offline.",
                     prioritariaText = record.priorityAction ?: "N/A",
                     nutricionalText = record.nutritionalRecommendation ?: "N/A",
+                    medicoText = record.medicalRecommendation ?: "Sin recomendación médica.",
+                    vacunasText = record.vaccineRecommendation ?: "Sin recomendación de vacunas.",
                     confianza = record.confidenceScore ?: 0f,
                     seguimientoText = " (Sugerido por Groq API)",
-                    seguimientoBoldText = "Acción Recomendada",
-                    healthChecks = healthChecks,
-                    vaccines = vaccines
+                    seguimientoBoldText = "Acción Recomendada"
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -232,11 +231,11 @@ fun AnimalAnalysisItem(
     diaText: String,
     prioritariaText: String,
     nutricionalText: String,
+    medicoText: String,
+    vacunasText: String,
     confianza: Float,
     seguimientoText: String,
-    seguimientoBoldText: String,
-    healthChecks: List<HealthRecord>,
-    vaccines: List<VaccinationRecord>
+    seguimientoBoldText: String
 ) {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         // Animal Header Card
@@ -344,6 +343,26 @@ fun AnimalAnalysisItem(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Recomendación Médica (generada por IA)
+        AnalysisCard(
+            title = "RECOMENDACIÓN MÉDICA",
+            iconColor = Color(0xFF1976D2)
+        ) {
+            Text(medicoText, color = TextDark, fontSize = 14.sp, lineHeight = 22.sp)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Plan de Vacunación (generado por IA)
+        AnalysisCard(
+            title = "PLAN DE VACUNACIÓN",
+            iconColor = Color(0xFF9C27B0)
+        ) {
+            Text(vacunasText, color = TextDark, fontSize = 14.sp, lineHeight = 22.sp)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Seguimiento Sugerido
         AnalysisCard(
             title = "SEGUIMIENTO SUGERIDO",
@@ -360,63 +379,6 @@ fun AnimalAnalysisItem(
                 fontSize = 14.sp,
                 lineHeight = 22.sp
             )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Historial Médico
-        AnalysisCard(
-            title = "HISTORIAL MÉDICO RECIENTE",
-
-        iconColor = Color(0xFF1976D2) // Azul
-        ) {
-            if (healthChecks.isEmpty()) {
-                Text("No hay registros médicos para este animal.", color = GrayText, fontSize = 14.sp)
-            } else {
-                val latestCheck = healthChecks.maxByOrNull { it.date }
-                if (latestCheck != null) {
-                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    val dateString = sdf.format(Date(latestCheck.date))
-
-                    Text("Último chequeo: $dateString", fontWeight = FontWeight.Bold, color = TextDark, fontSize = 14.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Peso: ${latestCheck.weightKg} kg", color = TextDark, fontSize = 14.sp)
-                    Text("Condición Corporal: ${latestCheck.bodyConditionScore}/5", color = TextDark, fontSize = 14.sp)
-                    if (latestCheck.notes != null) {
-                        Text("Obs: ${latestCheck.notes}", color = GrayText, fontSize = 13.sp)
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Vacunas
-        AnalysisCard(
-            title = "PLAN DE VACUNACIÓN",
-            iconColor = Color(0xFF9C27B0) // Morado
-        ) {
-            if (vaccines.isEmpty()) {
-                Text("No hay vacunas registradas.", color = GrayText, fontSize = 14.sp)
-            } else {
-                val applied = vaccines.count { it.status == VaccineStatus.APPLIED }
-                val pending = vaccines.count { it.status != VaccineStatus.APPLIED }
-
-                Text("Aplicadas: $applied", color = PrimaryGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("Pendientes: $pending", color = AccentOrange, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-
-                val nextVaccine = vaccines.filter { it.status != VaccineStatus.APPLIED }.minByOrNull { it.scheduledDate }
-                if (nextVaccine != null) {
-                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Próxima vacuna: ${nextVaccine.vaccineName} (${sdf.format(Date(nextVaccine.scheduledDate))})",
-                        color = TextDark,
-                        fontSize = 13.sp
-                    )
-                }
-            }
         }
     }
 }

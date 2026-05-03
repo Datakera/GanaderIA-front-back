@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -76,7 +77,14 @@ fun AnimalsScreen(
                          subtitle = subtitle,
                          status = statusText,
                          isAnalizado = isAnalizado,
-                         onClick = { onNavigateToDetail(animal.id) }
+                         onClick = { onNavigateToDetail(animal.id) },
+                         onDelete = {
+                             viewModel.deleteAnimal(
+                                 animalId = animal.id,
+                                 onSuccess = { /* Ya se actualiza el state en el ViewModel */ },
+                                 onError = { /* Opcional: mostrar un Toast */ }
+                             )
+                         }
                      )
                      Spacer(modifier = Modifier.height(12.dp))
                  }
@@ -93,7 +101,8 @@ fun AnimalListItem(
     subtitle: String, 
     status: String, 
     isAnalizado: Boolean,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -132,6 +141,19 @@ fun AnimalListItem(
                 color = if (isAnalizado) PrimaryGreen else AccentOrange,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Borrar animal",
+                tint = Color(0xFFD32F2F)
             )
         }
     }

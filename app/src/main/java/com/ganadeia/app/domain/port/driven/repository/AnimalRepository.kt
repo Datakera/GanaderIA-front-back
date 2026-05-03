@@ -36,4 +36,12 @@ interface AnimalRepository {
      * @return true si la operación fue exitosa.
      */
     suspend fun updateAnimalStatus(animalId: String, newStatus: AnimalStatus): Boolean
+
+    /**
+     * Elimina un animal y todos sus registros asociados (por CASCADE en Room).
+     *
+     * @param animalId  ID del animal a eliminar.
+     * @return true si la operación fue exitosa.
+     */
+    suspend fun deleteAnimal(animalId: String): Boolean
 }

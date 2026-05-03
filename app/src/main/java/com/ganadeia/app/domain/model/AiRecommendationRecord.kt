@@ -26,6 +26,8 @@ data class AiRecommendationRecord(
     val generalDiagnosis: String?,
     val priorityAction: String?,
     val nutritionalRecommendation: String?,
+    val medicalRecommendation: String?,
+    val vaccineRecommendation: String?,
     val confidenceScore: Float?,
     val respondedAt: Long?,              // Cuándo respondió la API
 

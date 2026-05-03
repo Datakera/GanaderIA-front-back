@@ -8,8 +8,6 @@ import com.ganadeia.app.application.GetAiRecommendationResult
 import com.ganadeia.app.application.GetAiRecommendationUseCase
 import com.ganadeia.app.data.repository.*
 import com.ganadeia.app.domain.model.Animal
-import com.ganadeia.app.domain.model.HealthRecord
-import com.ganadeia.app.domain.model.VaccinationRecord
 import com.ganadeia.app.infrastructure.remote.GroqAiService
 import com.ganadeia.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
@@ -24,9 +22,7 @@ sealed class IaAnalysisState {
     object Loading : IaAnalysisState()
     data class Success(
         val result: GetAiRecommendationResult,
-        val animal: Animal,
-        val healthChecks: List<HealthRecord>,
-        val vaccinations: List<VaccinationRecord>
+        val animal: Animal
     ) : IaAnalysisState()
     data class Error(val message: String) : IaAnalysisState()
 }
@@ -75,6 +71,8 @@ class IaAnalysisViewModel(application: Application) : AndroidViewModel(applicati
                 if (session != null) {
                     val animals = animalRepository.getAnimalsByOwner(session.userId)
                     _userAnimals.value = animals
+                } else {
+                    _userAnimals.value = emptyList()
                 }
             }
         }
@@ -94,14 +92,7 @@ class IaAnalysisViewModel(application: Application) : AndroidViewModel(applicati
                     val animal = animalRepository.getAnimalsByOwner(user.id).firstOrNull { it.id == animalId }
                         ?: return@withContext Result.failure(Exception("Animal no encontrado"))
 
-                    val useCaseResult = getAiRecommendationUseCase.execute(user, animalId)
-                    
-                    val healthChecks = healthCheckRepository.getHealthChecksByAnimal(animalId)
-                    val vaccinations = vaccinationRepository.getVaccinationsByAnimal(animalId)
-                    
-                    useCaseResult.map { recommendationResult ->
-                        Triple(recommendationResult, healthChecks, vaccinations)
-                    }
+                    getAiRecommendationUseCase.execute(user, animalId)
                 } catch (e: Exception) {
                     Result.failure(e)
                 }
@@ -109,14 +100,12 @@ class IaAnalysisViewModel(application: Application) : AndroidViewModel(applicati
 
             withContext(Dispatchers.Main) {
                 result.fold(
-                    onSuccess = { (recommendationResult, healthChecks, vaccinations) ->
+                    onSuccess = { recommendationResult ->
                         val animal = _userAnimals.value.firstOrNull { it.id == animalId }
                         if (animal != null) {
                             _analysisState.value = IaAnalysisState.Success(
                                 result = recommendationResult, 
-                                animal = animal,
-                                healthChecks = healthChecks,
-                                vaccinations = vaccinations
+                                animal = animal
                             )
                         } else {
                             _analysisState.value = IaAnalysisState.Error("Animal no encontrado localmente")

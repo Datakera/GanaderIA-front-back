@@ -20,16 +20,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ganadeia.app.ui.theme.*
 import com.ganadeia.app.ui.viewmodel.AuthViewModel
+import com.ganadeia.app.ui.viewmodel.AnimalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel,
+    animalViewModel: AnimalViewModel,
     onNavigateToHome: () -> Unit,
     onNavigateToIaAnalysis: () -> Unit,
     onNavigateToAnimals: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val animals by animalViewModel.animalesAgregados.collectAsState()
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -75,7 +79,11 @@ fun ProfileScreen(
                 .padding(paddingValues)
         ) {
             item {
-                ProfileHeaderSection()
+                ProfileHeaderSection(
+                    userName = currentUser?.name ?: "Ganadero",
+                    userEmail = currentUser?.email ?: "",
+                    animalCount = animals.size
+                )
             }
             item {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -93,9 +101,9 @@ fun ProfileScreen(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White)
                 ) {
-                    ProfileMenuItem(icon = Icons.Default.Home, title = "Nombre de finca", subtitle = "Finca El Valle")
+                    ProfileMenuItem(icon = Icons.Default.Home, title = "Nombre de finca", subtitle = currentUser?.ranchName ?: "Sin finca")
                     Divider(color = CardLight, thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
-                    ProfileMenuItem(icon = Icons.Default.LocationOn, title = "Ubicación", subtitle = "Huila, Colombia")
+                    ProfileMenuItem(icon = Icons.Default.LocationOn, title = "Ubicación", subtitle = "Santander, Colombia")
                 }
             }
             item {
@@ -135,7 +143,12 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileHeaderSection() {
+fun ProfileHeaderSection(userName: String, userEmail: String, animalCount: Int) {
+    val initials = userName.split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .joinToString("") { it.first().uppercase() }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -180,13 +193,13 @@ fun ProfileHeaderSection() {
                         .background(AccentOrange),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("CR", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Text(initials, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text("Carlos Rodríguez", color = TextDark, style = MaterialTheme.typography.titleMedium, fontSize = 20.sp)
-                Text("carlos@fincaelvalle.co", color = GrayText, fontSize = 14.sp)
+                Text(userName, color = TextDark, style = MaterialTheme.typography.titleMedium, fontSize = 20.sp)
+                Text(userEmail, color = GrayText, fontSize = 14.sp)
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
@@ -199,9 +212,9 @@ fun ProfileHeaderSection() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    ProfileStat(number = "24", label = "Animales")
-                    ProfileStat(number = "18", label = "Análisis")
-                    ProfileStat(number = "6", label = "Meses activo")
+                    ProfileStat(number = "$animalCount", label = "Animales")
+                    ProfileStat(number = "IA", label = "Análisis")
+                    ProfileStat(number = "—", label = "Meses activo")
                 }
             }
         }

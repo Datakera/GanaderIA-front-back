@@ -62,6 +62,16 @@ class RoomAnimalRepository(
         }
     }
 
+    override suspend fun deleteAnimal(animalId: String): Boolean {
+        return try {
+            animalDao.deleteAnimal(animalId)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     // ── Lectura ───────────────────────────────────────────────────────────────
 
     override suspend fun getAnimalsByOwner(ownerId: String): List<Animal> {

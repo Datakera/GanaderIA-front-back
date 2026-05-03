@@ -56,6 +56,8 @@ data class GroqStructuredResponse(
     @SerializedName("general_diagnosis") val generalDiagnosis: String,
     @SerializedName("priority_action") val priorityAction: String,
     @SerializedName("nutritional_recommendation") val nutritionalRecommendation: String,
+    @SerializedName("medical_recommendation") val medicalRecommendation: String,
+    @SerializedName("vaccine_recommendation") val vaccineRecommendation: String,
     @SerializedName("confidence_score") val confidenceScore: Float
 )
 
@@ -78,6 +80,8 @@ class GroqAiService(
                   "general_diagnosis": "Tu diagnóstico general aquí (máx 3 oraciones)",
                   "priority_action": "La acción principal a seguir (ej. Re-evaluar en 7 días...)",
                   "nutritional_recommendation": "Recomendación de alimentación (máx 2 oraciones)",
+                  "medical_recommendation": "Recomendación médica completa: qué tratamientos, medicamentos o procedimientos veterinarios se sugieren para este animal según su estado actual de salud, síntomas observados y edad. Si está sano, indica chequeos preventivos recomendados (máx 3 oraciones)",
+                  "vaccine_recommendation": "Plan de vacunación recomendado según la edad en meses del animal, su raza y síntomas. Indica vacunas específicas con nombres y edades recomendadas de aplicación. Si ya tiene vacunas aplicadas, sugiere refuerzos o vacunas faltantes (máx 3 oraciones)",
                   "confidence_score": 85.5
                 }
                 El confidence_score debe ser un número entre 0 y 100.
@@ -117,6 +121,8 @@ class GroqAiService(
                         generalDiagnosis = structuredResponse.generalDiagnosis,
                         priorityAction = structuredResponse.priorityAction,
                         nutritionalRecommendation = structuredResponse.nutritionalRecommendation,
+                        medicalRecommendation = structuredResponse.medicalRecommendation,
+                        vaccineRecommendation = structuredResponse.vaccineRecommendation,
                         confidenceScore = structuredResponse.confidenceScore
                     )
                 )

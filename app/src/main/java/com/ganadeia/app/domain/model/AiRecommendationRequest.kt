@@ -69,5 +69,7 @@ data class AiRecommendationResponse(
     val generalDiagnosis: String,
     val priorityAction: String,
     val nutritionalRecommendation: String,
+    val medicalRecommendation: String,
+    val vaccineRecommendation: String,
     val confidenceScore: Float       // 0.0 – 1.0
 )

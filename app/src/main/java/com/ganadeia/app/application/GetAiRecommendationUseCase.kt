@@ -142,6 +142,8 @@ class GetAiRecommendationUseCase(
             generalDiagnosis          = null,
             priorityAction            = null,
             nutritionalRecommendation = null,
+            medicalRecommendation     = null,
+            vaccineRecommendation     = null,
             confidenceScore           = null,
             respondedAt               = null
         )
@@ -174,6 +176,8 @@ class GetAiRecommendationUseCase(
                     generalDiagnosis          = response.generalDiagnosis,
                     priorityAction            = response.priorityAction,
                     nutritionalRecommendation = response.nutritionalRecommendation,
+                    medicalRecommendation     = response.medicalRecommendation,
+                    vaccineRecommendation     = response.vaccineRecommendation,
                     confidenceScore           = response.confidenceScore,
                     respondedAt               = response.generatedAt
                 )

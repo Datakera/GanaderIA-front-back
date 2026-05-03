@@ -71,7 +71,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             val session = withContext(Dispatchers.IO) {
                 checkSessionUseCase.execute()
             }
-            _splashState.value = if (session != null) SplashState.SessionActive else SplashState.NoSession
+            if (session != null) {
+                val user = withContext(Dispatchers.IO) {
+                    userRepository.getUserById(session.userId)
+                }
+                _currentUser.value = user
+                _splashState.value = SplashState.SessionActive
+            } else {
+                _splashState.value = SplashState.NoSession
+            }
         }
     }
 

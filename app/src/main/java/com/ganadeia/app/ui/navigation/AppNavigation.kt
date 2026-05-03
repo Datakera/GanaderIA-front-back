@@ -79,6 +79,8 @@ fun AppNavigation() {
         // ── Main screens ──────────────────────────────────────────────────────
         composable("dashboard") {
             DashboardScreen(
+                authViewModel = authViewModel,
+                animalViewModel = animalViewModel,
                 onNavigateToProfile        = {
                     navController.navigate("profile") { popUpTo("dashboard") }
                 },
@@ -90,6 +92,9 @@ fun AppNavigation() {
                 },
                 onNavigateToAnimals        = {
                     navController.navigate("animals") { popUpTo("dashboard") }
+                },
+                onNavigateToAnimalDetail   = { animalId ->
+                    navController.navigate("animal_detail/$animalId")
                 }
             )
         }
@@ -97,6 +102,7 @@ fun AppNavigation() {
         composable("profile") {
             ProfileScreen(
                 authViewModel       = authViewModel,
+                animalViewModel     = animalViewModel,
                 onNavigateToHome    = {
                     navController.navigate("dashboard") {
                         popUpTo("dashboard") { inclusive = true }
@@ -126,7 +132,10 @@ fun AppNavigation() {
         composable("ia_analysis") {
             IaAnalysisScreen(
                 viewModel = iaAnalysisViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAnimalDetail = { animalId ->
+                    navController.navigate("animal_detail/$animalId")
+                }
             )
         }
 
