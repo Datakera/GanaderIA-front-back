@@ -10,6 +10,7 @@ import com.ganadeia.app.domain.model.UserRole
 import com.ganadeia.app.domain.port.driven.repository.AnimalRepository
 import com.ganadeia.app.domain.service.DateCalculator
 import com.ganadeia.app.domain.service.FollowUpService
+import com.ganadeia.app.infrastructure.monitoring.AnalyticsReporter
 import java.util.UUID
 
 class AddAnimalUseCase(
@@ -57,8 +58,12 @@ class AddAnimalUseCase(
 
         val success = animalRepository.addAnimal(request.owner.id, newAnimal)
 
-        return if (success) Result.success(newAnimal)
-        else Result.failure(Exception("Failed to save the animal to the local database."))
+        if (success) {
+            AnalyticsReporter.logAddAnimal(newAnimal.type.name)
+            return Result.success(newAnimal)
+        } else {
+            return Result.failure(Exception("Failed to save the animal to the local database."))
+        }
     }
 }
 data class AddAnimalRequest(

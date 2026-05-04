@@ -5,6 +5,7 @@ import com.ganadeia.app.domain.model.Session
 import com.ganadeia.app.domain.model.User
 import com.ganadeia.app.domain.port.driven.repository.SessionRepository
 import com.ganadeia.app.domain.service.PasswordService
+import com.ganadeia.app.infrastructure.monitoring.AnalyticsReporter
 import java.util.UUID
 
 /**
@@ -100,6 +101,8 @@ class LoginUseCase(
                 RuntimeException("No se pudo persistir la sesión. Intenta de nuevo.")
             )
         }
+
+        AnalyticsReporter.logLogin()
 
         return Result.success(LoginResult(user = user, session = session))
     }

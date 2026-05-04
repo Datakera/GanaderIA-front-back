@@ -40,8 +40,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     // ── Room setup — usa el singleton de GanadiaApplication ───────────────────
     private val database = (application as GanadiaApplication).database
 
-    private val userRepository    = RoomUserRepository(database.userDao())
-    private val sessionRepository = RoomSessionRepository(database.userDao(), database.sessionDao())
+    private val localUserRepository    = RoomUserRepository(database.userDao())
+    private val localSessionRepository = RoomSessionRepository(database.userDao(), database.sessionDao())
+
+    private val authRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirebaseAuthRepository(
+        auth = com.google.firebase.auth.FirebaseAuth.getInstance(),
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localUserRepository = localUserRepository,
+        localSessionRepository = localSessionRepository
+    )
+
+    private val userRepository    = authRepository
+    private val sessionRepository = authRepository
 
     // ── Casos de uso (carpeta application/ — única fuente de lógica) ───────────
     private val loginUseCase          = LoginUseCase(sessionRepository)

@@ -36,10 +36,22 @@ class IaAnalysisViewModel(application: Application) : AndroidViewModel(applicati
     private val database = (application as GanadiaApplication).database
 
     // ── Repositorios ──────────────────────────────────────────────────────────
-    private val animalRepository = RoomAnimalRepository(database.animalDao())
-    private val healthCheckRepository = RoomHealthCheckRepository(database.healthCheckDao())
+    private val localAnimalRepository = RoomAnimalRepository(database.animalDao())
+    private val animalRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirestoreAnimalRepository(
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localAnimalRepository = localAnimalRepository
+    )
+    private val localHealthCheckRepository = RoomHealthCheckRepository(database.healthCheckDao())
+    private val healthCheckRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirestoreHealthCheckRepository(
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localHealthCheckRepository = localHealthCheckRepository
+    )
     private val vaccinationRepository = RoomVaccinationRepository(database.vaccinationDao())
-    private val aiRecommendationRepository = RoomAiRecommendationRepository(database.aiRecommendationDao())
+    private val localAiRecommendationRepository = RoomAiRecommendationRepository(database.aiRecommendationDao())
+    private val aiRecommendationRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirestoreAiRecommendationRepository(
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localAiRecommendationRepository = localAiRecommendationRepository
+    )
     private val sessionRepository = RoomSessionRepository(database.userDao(), database.sessionDao())
     private val userRepository = RoomUserRepository(database.userDao())
 

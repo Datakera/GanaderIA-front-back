@@ -26,8 +26,16 @@ class AnimalViewModel(application: Application) : AndroidViewModel(application) 
     // Room comparte la misma instancia de BD con AuthViewModel mediante GanadiaApplication
     private val database = (application as GanadiaApplication).database
 
-    private val animalRepository = RoomAnimalRepository(database.animalDao())
-    private val aiRecommendationRepository = RoomAiRecommendationRepository(database.aiRecommendationDao())
+    private val localAnimalRepository = RoomAnimalRepository(database.animalDao())
+    private val animalRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirestoreAnimalRepository(
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localAnimalRepository = localAnimalRepository
+    )
+    private val localAiRecommendationRepository = RoomAiRecommendationRepository(database.aiRecommendationDao())
+    private val aiRecommendationRepository = com.ganadeia.app.infrastructure.persistence.firebase.FirestoreAiRecommendationRepository(
+        firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance(),
+        localAiRecommendationRepository = localAiRecommendationRepository
+    )
     
     // 2. Inicialización estricta del único caso de uso
     private val addAnimalUseCase = AddAnimalUseCase(animalRepository)

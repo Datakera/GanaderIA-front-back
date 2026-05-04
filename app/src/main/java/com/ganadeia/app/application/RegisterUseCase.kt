@@ -5,6 +5,7 @@ import com.ganadeia.app.domain.model.UserRole
 import com.ganadeia.app.domain.port.driven.repository.UserRepository
 import com.ganadeia.app.domain.port.driven.repository.SessionRepository
 import com.ganadeia.app.domain.service.PasswordService
+import com.ganadeia.app.infrastructure.monitoring.AnalyticsReporter
 import java.util.UUID
 
 /**
@@ -148,6 +149,8 @@ class RegisterUseCase(
                 )
             )
         }
+
+        AnalyticsReporter.logSignUp()
 
         return Result.success(RegisterResult(user = newUser, session = session))
     }

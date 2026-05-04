@@ -13,6 +13,8 @@ import com.ganadeia.app.domain.port.driven.repository.AnimalRepository
 import com.ganadeia.app.domain.port.driven.repository.HealthCheckRepository
 import com.ganadeia.app.domain.port.driven.repository.VaccinationRepository
 import com.ganadeia.app.domain.port.driven.service.AiServicePort
+import com.ganadeia.app.infrastructure.monitoring.AnalyticsReporter
+import com.ganadeia.app.infrastructure.monitoring.CrashReporter
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -167,6 +169,7 @@ class GetAiRecommendationUseCase(
         }
 
         // CA-3: Hay red — intentar llamar a la API
+        AnalyticsReporter.logAiAnalysisRequested(animal.type.name)
         val apiResult = aiServicePort.requestRecommendation(request)
 
         return apiResult.fold(
@@ -190,6 +193,7 @@ class GetAiRecommendationUseCase(
                 )
             },
             onFailure = { error ->
+                CrashReporter.logError("GroqAI_API", error)
                 // CA-3: API falló — marcar como FAILED para reintento
                 val failedRecord = pendingRecord.copy(
                     status           = AiRecommendationStatus.FAILED,
