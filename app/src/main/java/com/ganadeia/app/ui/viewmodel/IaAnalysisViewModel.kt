@@ -8,6 +8,10 @@ import com.ganadeia.app.application.GetAiRecommendationResult
 import com.ganadeia.app.application.GetAiRecommendationUseCase
 import com.ganadeia.app.data.repository.*
 import com.ganadeia.app.domain.model.Animal
+import com.ganadeia.app.domain.model.HealthRecord
+import com.ganadeia.app.domain.model.SyncStatus
+import com.ganadeia.app.domain.model.VisibleSymptom
+import java.util.UUID
 import com.ganadeia.app.infrastructure.remote.GroqAiService
 import com.ganadeia.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
@@ -93,6 +97,71 @@ class IaAnalysisViewModel(application: Application) : AndroidViewModel(applicati
                         ?: return@withContext Result.failure(Exception("Animal no encontrado"))
 
                     getAiRecommendationUseCase.execute(user, animalId)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                result.fold(
+                    onSuccess = { recommendationResult ->
+                        val animal = _userAnimals.value.firstOrNull { it.id == animalId }
+                        if (animal != null) {
+                            _analysisState.value = IaAnalysisState.Success(
+                                result = recommendationResult, 
+                                animal = animal
+                            )
+                        } else {
+                            _analysisState.value = IaAnalysisState.Error("Animal no encontrado localmente")
+                        }
+                    },
+                    onFailure = { error ->
+                        _analysisState.value = IaAnalysisState.Error(error.message ?: "Error desconocido al analizar")
+                    }
+                )
+            }
+        }
+    }
+
+    fun analyzeAnimalWithUpdate(animalId: String, newDate: Long, newWeight: Double, newSymptoms: Set<VisibleSymptom>) {
+        _analysisState.value = IaAnalysisState.Loading
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val session = sessionRepository.getActiveSession()
+                        ?: return@withContext Result.failure(Exception("No hay sesión activa"))
+                    
+                    val user = userRepository.getUserById(session.userId)
+                        ?: return@withContext Result.failure(Exception("Usuario no encontrado"))
+                    
+                    val animal = animalRepository.getAnimalsByOwner(user.id).firstOrNull { it.id == animalId }
+                        ?: return@withContext Result.failure(Exception("Animal no encontrado"))
+
+                    // 1. Crear el nuevo chequeo médico
+                    val newCheck = HealthRecord(
+                        id = UUID.randomUUID().toString(),
+                        animalId = animalId,
+                        date = newDate,
+                        weightKg = newWeight,
+                        bodyConditionScore = 3, // O podríamos pedirlo, pero por defecto 3
+                        symptoms = newSymptoms,
+                        notes = "Actualización de análisis IA",
+                        aiRecommendation = null,
+                        syncStatus = SyncStatus.PENDING_SYNC,
+                        confirmedFollowUpDate = null
+                    )
+                    healthCheckRepository.saveHealthCheck(newCheck)
+
+                    // 2. Actualizar el peso del animal
+                    val updatedAnimal = animal.copy(currentWeight = newWeight)
+                    animalRepository.updateAnimal(user.id, updatedAnimal)
+                    
+                    // Recargar los animales para reflejar el cambio de peso
+                    val updatedAnimals = animalRepository.getAnimalsByOwner(session.userId)
+                    _userAnimals.value = updatedAnimals
+
+                    // 3. Lanzar el análisis
+                    getAiRecommendationUseCase.execute(user, animalId, newDate)
                 } catch (e: Exception) {
                     Result.failure(e)
                 }

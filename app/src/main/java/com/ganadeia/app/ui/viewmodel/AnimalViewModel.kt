@@ -38,8 +38,8 @@ class AnimalViewModel(application: Application) : AndroidViewModel(application) 
     private val _animalesAgregados = MutableStateFlow<List<Animal>>(emptyList())
     val animalesAgregados: StateFlow<List<Animal>> = _animalesAgregados.asStateFlow()
 
-    private val _lastRecommendation = MutableStateFlow<AiRecommendationRecord?>(null)
-    val lastRecommendation: StateFlow<AiRecommendationRecord?> = _lastRecommendation.asStateFlow()
+    private val _recommendationsHistory = MutableStateFlow<List<AiRecommendationRecord>>(emptyList())
+    val recommendationsHistory: StateFlow<List<AiRecommendationRecord>> = _recommendationsHistory.asStateFlow()
 
     init {
         loadUserAnimals()
@@ -47,7 +47,7 @@ class AnimalViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshForCurrentUser() {
         _animalesAgregados.value = emptyList()
-        _lastRecommendation.value = null
+        _recommendationsHistory.value = emptyList()
         _latestGlobalRecommendation.value = null
         loadUserAnimals()
     }
@@ -66,11 +66,13 @@ class AnimalViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun loadLastRecommendation(animalId: String) {
+    fun loadAllRecommendations(animalId: String) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val rec = aiRecommendationRepository.getLastCompletedRecommendation(animalId)
-                _lastRecommendation.value = rec
+                // Obtenemos todas y las ordenamos por fecha ascendente (la primera al inicio)
+                val recs = aiRecommendationRepository.getRecommendationsByAnimal(animalId)
+                    .sortedBy { it.requestedAt }
+                _recommendationsHistory.value = recs
             }
         }
     }

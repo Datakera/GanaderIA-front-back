@@ -16,6 +16,7 @@ import com.ganadeia.app.ui.screens.LoginScreen
 import com.ganadeia.app.ui.screens.ProfileScreen
 import com.ganadeia.app.ui.screens.RegisterAnimalScreen
 import com.ganadeia.app.ui.screens.RegisterScreen
+import com.ganadeia.app.ui.screens.UpdateAnalysisScreen
 import com.ganadeia.app.ui.viewmodel.AnimalViewModel
 import com.ganadeia.app.ui.viewmodel.AuthViewModel
 import com.ganadeia.app.ui.viewmodel.IaAnalysisViewModel
@@ -154,7 +155,25 @@ fun AppNavigation() {
             AnimalDetailScreen(
                 viewModel      = animalViewModel,
                 animalId       = animalId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToUpdateAnalysis = { id ->
+                    navController.navigate("update_analysis/$id")
+                }
+            )
+        }
+
+        composable("update_analysis/{animalId}") { backStackEntry ->
+            val animalId = backStackEntry.arguments?.getString("animalId") ?: ""
+            UpdateAnalysisScreen(
+                viewModel = iaAnalysisViewModel,
+                animalId = animalId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToIaAnalysis = {
+                    navController.navigate("ia_analysis") {
+                        // Opcional: limpiar la pila para que al ir atrás desde ia_analysis no vuelva al form
+                        popUpTo("update_analysis/$animalId") { inclusive = true }
+                    }
+                }
             )
         }
     }
