@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "GanadeIA"
 include(":app")
+include(":backend")
