@@ -15,7 +15,8 @@ data class Animal(
     val birthDate: Long,
     val purpose: AnimalPurpose,
     val status: AnimalStatus,
-    val nextFollowUpDate: Long?
+    val nextFollowUpDate: Long?,
+    val photoPath: String? = null
 )
 
 enum class AnimalPurpose { MEAT, MILK, BREEDING, DUAL_PURPOSE }

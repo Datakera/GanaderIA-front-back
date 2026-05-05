@@ -15,5 +15,6 @@ data class AnimalEntity(
     val birthDate: Long,
     val purpose: String,
     val status: String,
-    val nextFollowUpDate: Long?
+    val nextFollowUpDate: Long?,
+    val photoPath: String? = null
 )

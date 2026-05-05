@@ -36,7 +36,7 @@ import com.ganadeia.app.infrastructure.persistence.room.entity.VaccinationEntity
         UserEntity::class,       // ← nueva tabla
         SessionEntity::class    // ← nueva tabla
     ],
-    version = 5,                        // ← v5: add medicalRecommendation + vaccineRecommendation columns
+    version = 6,                        // ← v6: add photoPath column to animals
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

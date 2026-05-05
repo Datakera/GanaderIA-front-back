@@ -45,7 +45,8 @@ class AddAnimalUseCase(
             birthDate = calculatedBirthDate,
             purpose = request.purpose,
             status = AnimalStatus.ACTIVE,
-            nextFollowUpDate = request.initialFollowUpDate
+            nextFollowUpDate = request.initialFollowUpDate,
+            photoPath = request.photoPath
         )
 
         // 2. Lógica de asignación de fecha
@@ -75,5 +76,6 @@ data class AddAnimalRequest(
     val weight: Double,
     val ageInMonths: Int,
     val purpose: AnimalPurpose,
-    val initialFollowUpDate: Long? = null // <--- Opcional
+    val initialFollowUpDate: Long? = null,
+    val photoPath: String? = null
 )

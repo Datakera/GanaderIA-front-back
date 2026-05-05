@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.ganadeia.app.domain.model.Animal
 import com.ganadeia.app.ui.theme.*
 import com.ganadeia.app.ui.viewmodel.AnimalViewModel
+import androidx.compose.ui.graphics.asImageBitmap
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,14 +83,31 @@ fun AnimalDetailScreen(viewModel: AnimalViewModel, animalId: String, onNavigateB
                         .padding(24.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFE8F2EC)), // matching logo green shape
-                            contentAlignment = Alignment.Center
-                        ) {
-                             Text("🐄", fontSize = 32.sp)
+                        if (animal.photoPath != null && java.io.File(animal.photoPath).exists()) {
+                            val bitmap = remember(animal.photoPath) {
+                                android.graphics.BitmapFactory.decodeFile(animal.photoPath)
+                            }
+                            if (bitmap != null) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "Foto de ${animal.name}",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFE8F2EC)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🐄", fontSize = 32.sp)
+                            }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(animal.name, color = TextDark, style = MaterialTheme.typography.titleMedium)

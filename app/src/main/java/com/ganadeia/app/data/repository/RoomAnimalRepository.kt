@@ -109,7 +109,8 @@ class RoomAnimalRepository(
         birthDate = birthDate,
         purpose = purpose.name,
         status = status.name,
-        nextFollowUpDate = nextFollowUpDate
+        nextFollowUpDate = nextFollowUpDate,
+        photoPath = photoPath
     )
 
     /**
@@ -127,6 +128,7 @@ class RoomAnimalRepository(
         birthDate = birthDate,
         purpose = AnimalPurpose.valueOf(purpose),
         status = AnimalStatus.valueOf(status),
-        nextFollowUpDate = nextFollowUpDate
+        nextFollowUpDate = nextFollowUpDate,
+        photoPath = photoPath
     )
 }
